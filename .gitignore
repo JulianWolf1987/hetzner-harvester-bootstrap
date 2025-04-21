@@ -1,0 +1,85 @@
+# =========================
+# General
+# =========================
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.retry
+*.orig
+*~
+.DS_Store
+Thumbs.db
+
+# =========================
+# Shell & CLI artifacts
+# =========================
+.env
+.env.*
+.cache/
+.history
+*.sh~
+
+# =========================
+# Ansible-related
+# =========================
+inventory/*.ini
+inventory/*.yml
+inventory/*.yaml
+inventory/host_vars/
+inventory/group_vars/
+secrets.yml
+vault.yml
+*.vault
+*.cfg.bak
+*.retry
+*.facts
+*.tar.gz
+*.zip
+
+# Molecule (if used for testing)
+.molecule/
+
+# SSH keys and sensitive files
+*.pem
+*.pub
+*.key
+*.crt
+*.csr
+.ssh/
+ssh_config
+
+# Local execution results
+*.out
+*.err
+*.dump
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+.code-workspace
+
+# =========================
+# Python (if used for dynamic inventory or scripts)
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log.*
+
+# =========================
+# System-specific
+# =========================
+.idea/
+*.iml
