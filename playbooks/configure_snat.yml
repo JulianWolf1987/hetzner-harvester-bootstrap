@@ -1,0 +1,6 @@
+---
+- name: Konfiguriere SNAT-Regeln
+  hosts: harvester_host
+  become: yes
+  roles:
+    - snat

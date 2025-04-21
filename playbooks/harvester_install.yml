@@ -1,0 +1,6 @@
+---
+- name: Installiere und konfiguriere Harvester auf Hetzner-Server
+  hosts: harvester_host
+  become: yes
+  roles:
+    - harvester

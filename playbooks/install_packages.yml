@@ -1,0 +1,21 @@
+---
+- name: Installiere erforderliche Pakete
+  hosts: harvester_host
+  become: yes
+  tasks:
+    - name: Update der Paketquelle
+      apt:
+        update_cache: yes
+
+    - name: Installiere iptables-persistent und netplan
+      apt:
+        name:
+          - iptables-persistent
+          - netplan.io
+        state: present
+
+    - name: Installiere kubectl
+      shell: |
+        curl -LO "https://dl.k8s.io/release/v1.23.0/bin/linux/amd64/kubectl"
+        chmod +x ./kubectl
+        mv ./kubectl /usr/local/bin/kubectl

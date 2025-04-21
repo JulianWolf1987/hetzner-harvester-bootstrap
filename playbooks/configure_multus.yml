@@ -1,0 +1,6 @@
+---
+- name: Installiere und konfiguriere Multus CNI
+  hosts: harvester_host
+  become: yes
+  roles:
+    - multus

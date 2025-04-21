@@ -1,0 +1,21 @@
+---
+- name: Master-Playbook für vollständige Harvester-Installation und -Konfiguration
+  hosts: harvester_host
+  become: yes
+  gather_facts: false
+
+  tasks:
+    - name: "Importiere: install_packages.yml"
+      import_playbook: playbooks/install_packages.yml
+
+    - name: "Importiere: harvester_install.yml"
+      import_playbook: playbooks/harvester_install.yml
+
+    - name: "Importiere: setup_bridge.yml"
+      import_playbook: playbooks/setup_bridge.yml
+
+    - name: "Importiere: configure_snat.yml"
+      import_playbook: playbooks/configure_snat.yml
+
+    - name: "Importiere: configure_multus.yml"
+      import_playbook: playbooks/configure_multus.yml

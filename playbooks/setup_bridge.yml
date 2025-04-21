@@ -1,0 +1,6 @@
+---
+- name: Erstelle und konfiguriere interne Bridge br-internal
+  hosts: harvester_host
+  become: yes
+  roles:
+    - bridge
