@@ -1,0 +1,30 @@
+---
+- name: Erstelle die Bridge br-internal
+  shell: |
+    ip link add name br-internal type bridge
+    ip addr add 192.168.100.1/24 dev br-internal
+    ip link set br-internal up
+  args:
+    creates: /sys/class/net/br-internal
+
+- name: Erstelle die Netplan-Konfiguration für br-internal
+  copy:
+    dest: /etc/netplan/99-bridge.yaml
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          eth0:
+            dhcp4: true
+        bridges:
+          br-internal:
+            interfaces:
+              - eth1
+            addresses:
+              - 192.168.100.1/24
+            dhcp4: no
+            optional: true
+
+- name: Netplan anwenden
+  shell: netplan apply

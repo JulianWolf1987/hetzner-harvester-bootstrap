@@ -1,0 +1,31 @@
+---
+- name: Installiere Harvester auf Hetzner-Server
+  hosts: harvester_host
+  become: yes
+  tasks:
+    - name: Installiere notwendige Abhängigkeiten
+      apt:
+        name: 
+          - curl
+          - wget
+          - parted
+          - gdisk
+        state: present
+
+    - name: Lade das Harvester-ISO herunter
+      get_url:
+        url: "https://github.com/harvester/harvester/releases/download/v1.0.0/harvester-v1.0.0.iso"
+        dest: "/tmp/harvester.iso"
+
+    - name: Kopiere das ISO auf die Zielpartition
+      shell: |
+        mount -o loop /tmp/harvester.iso /mnt
+        cp -r /mnt/* /mnt/disk/
+      args:
+        creates: /mnt/disk
+
+    - name: Konfiguriere das Boot-Image für Harvester
+      shell: |
+        dd if=/mnt/disk/boot/harvester-v1.0.0.img of=/dev/sda bs=4M status=progress
+      args:
+        creates: /dev/sda

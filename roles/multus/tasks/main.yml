@@ -1,0 +1,31 @@
+---
+- name: Installiere Multus CNI
+  shell: |
+    kubectl apply -f https://github.com/k8snetworkplumbingwg/multus-cni/releases/download/v3.7/multus-3.7.yaml
+
+- name: Erstelle NetworkAttachmentDefinition für internes Netzwerk
+  copy:
+    dest: /etc/kubernetes/manifests/internal-network.yaml
+    content: |
+      apiVersion: k8s.cni.cncf.io/v1
+      kind: NetworkAttachmentDefinition
+      metadata:
+        name: internal-net
+        namespace: default
+      spec:
+        config: |
+          {
+            "cniVersion": "0.3.1",
+            "type": "bridge",
+            "bridge": "br-internal",
+            "ipam": {
+              "type": "static",
+              "subnet": "192.168.100.0/24",
+              "rangeStart": "192.168.100.100",
+              "rangeEnd": "192.168.100.200",
+              "gateway": "192.168.100.1"
+            }
+          }
+
+- name: Wende NetworkAttachmentDefinition auf Kubernetes an
+  shell: kubectl apply -f /etc/kubernetes/manifests/internal-network.yaml

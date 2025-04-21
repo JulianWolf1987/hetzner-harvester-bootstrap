@@ -1,0 +1,19 @@
+---
+- name: SNAT Regel hinzufügen
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    source: 192.168.100.0/24
+    out_interface: eth0
+    jump: MASQUERADE
+
+- name: Speichere die iptables-Regeln
+  shell: iptables-save > /etc/iptables/rules.v4
+  when: ansible_os_family == "Debian"
+
+- name: Aktivieren von iptables-persistent
+  service:
+    name: netfilter-persistent
+    state: started
+    enabled: yes
+  when: ansible_os_family == "Debian"
