@@ -8,10 +8,7 @@ This project provides a fully automated pipeline to deploy Harvester on Hetzner 
 
 ## ✅ Features
 
-- 📦 **Fully unattended installation** of Harvester via ISO & `kexec`
-- 🧱 **Disk partitioning with RAID-0** and custom storage layout:
-  - 25% for Harvester OS
-  - 75% for Longhorn (persistent volumes)
+- 📦 **Fully unattended installation** of Harvester
 - 🌐 **Custom bridged & NAT networking** for internal and external traffic:
   - Pods and VMs use masquerading to appear as the host
   - Internal VM/pod communication via separate virtual bridge
@@ -29,16 +26,17 @@ This project provides a fully automated pipeline to deploy Harvester on Hetzner 
 
 ```plaintext
 .
-├── playbooks/
-│   ├── 01_prepare_disk.yml
-│   ├── 02_install_harvester.yml
-│   ├── 03_configure_network.yml
-│   ├── 04_finalize.yml
-│   └── site.yml                  # Master playbook (includes all others)
+├── playbooks/                            # part splited playbooks
+│   ├── configure_multus.yml
+│   ├── configure_snat.yml
+│   ├── harvester_install.yml
+│   ├── install_packages.yml
+│   └── setup_bridge.yml                  
 ├── inventory/
-│   └── hosts                    # Define your Hetzner target hosts here
-├── scripts/
-│   └── run-playbooks.sh         # CLI runner script
+│   └── hosts.ini                         # Define your Hetzner target hosts here
+├── run-playbooks.sh                      # CLI runner script
+├── playbook.yml                          # Master playbook (includes all others)
+├── ansible.cfg                           # ansible local config
 ├── LICENSE
 └── README.md
 ```
