@@ -1,6 +1,140 @@
----
-- name: Installiere und konfiguriere Harvester auf Hetzner-Server
+- name: Nutze bestehendes RAID-1-Array und installiere Harvester
   hosts: harvester_host
   become: yes
-  roles:
-    - harvester
+
+  vars:
+    boot_partition: /dev/md0p1
+    system_partition: /dev/md0p2
+    longhorn_partition: /dev/md0p3
+    kernel_url: "https://releases.rancher.com/harvester/v1.4.2/harvester-v1.4.2-vmlinuz-amd64"
+    initrd_url: "https://releases.rancher.com/harvester/v1.4.2/harvester-v1.4.2-initrd-amd64"
+    rootfs_url: "https://releases.rancher.com/harvester/v1.4.2/harvester-v1.4.2-rootfs-amd64.squashfs"
+    ssh_key_path: "keys/id_rsa.pub"
+    mount_point: /mnt/harvester
+    target_mount: /mnt/harvester_root
+
+  tasks:
+    - name: Warte auf Verbindung
+      wait_for_connection:
+        timeout: 1
+      ignore_errors: yes
+      register: user_connection
+      tags: always
+
+    - name: Setze connect_user
+      set_fact:
+        connect_user: "{{ 'root' if user_connection.failed else ansible_user }}"
+      tags: always
+
+    - name: Installiere notwendige Pakete
+      apt:
+        name:
+          - mdadm
+          - curl
+          - wget
+          - parted
+          - gdisk
+          - grub-pc
+          - kexec-tools
+          - squashfs-tools
+        state: present
+
+    - name: Lade den Harvester-Kernel herunter
+      get_url:
+        url: "{{ kernel_url }}"
+        dest: "/tmp/harvester-vmlinuz"
+
+    - name: Lade das Initramfs herunter
+      get_url:
+        url: "{{ initrd_url }}"
+        dest: "/tmp/harvester-initrd"
+
+    - name: Lade das rootfs.squashfs herunter
+      get_url:
+        url: "{{ rootfs_url }}"
+        dest: "/tmp/harvester-rootfs.squashfs"
+
+    - name: Entpacke rootfs in das Zielsystem
+      command: |
+        unsquashfs -f -d {{ target_mount }} /tmp/harvester-rootfs.squashfs
+      args:
+        creates: "{{ target_mount }}/etc"
+
+    - name: Mounte die Partitionen und Verzeichnisse
+      block:
+        - name: Mounte die Boot-Partition
+          mount:
+            src: "{{ boot_partition }}"
+            dest: "/mnt/boot"
+            fstype: ext4
+            state: mounted
+
+        - name: Mounte die System-Partition
+          mount:
+            src: "{{ system_partition }}"
+            dest: "{{ target_mount }}"
+            fstype: ext4
+            state: mounted
+
+        - name: Stelle sicher, dass die nötigen Verzeichnisse im Chroot verfügbar sind
+          command: mkdir -p /mnt/harvester_root/{dev,proc,sys}
+
+        - name: Mounte /dev, /proc und /sys ins Chroot
+          mount:
+            src: "{{ item.src }}"
+            dest: "/mnt/harvester_root/{{ item.dest }}"
+            fstype: none
+            opts: bind
+            state: mounted
+          loop:
+            - { src: /dev, dest: dev }
+            - { src: /proc, dest: proc }
+            - { src: /sys, dest: sys }
+
+    - name: Kopiere Kernel auf die Zielpartition
+      copy:
+        src: "/tmp/harvester-vmlinuz"
+        dest: "{{ target_mount }}/boot/vmlinuz"
+
+    - name: Kopiere Initramfs auf die Zielpartition
+      copy:
+        src: "/tmp/harvester-initrd"
+        dest: "{{ target_mount }}/boot/initrd.img"
+
+    - name: Installiere GRUB im Zielsystem
+      command:
+        cmd: chroot {{ target_mount }} grub-install --target=i386-pc --recheck /dev/md0
+        creates: "{{ target_mount }}/boot/grub/grub.cfg"
+
+    - name: Aktualisiere GRUB im Zielsystem
+      command:
+        cmd: chroot {{ target_mount }} update-grub
+        creates: "{{ target_mount }}/boot/grub/grub.cfg"
+
+    - name: Installiere den öffentlichen SSH-Schlüssel im Zielsystem
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', ssh_key_path) }}"
+        path: "{{ target_mount }}/root/.ssh/authorized_keys"
+
+    - name: Reboot auslösen
+      reboot:
+        reboot_timeout: 600
+        test_command: whoami
+
+  handlers:
+    - name: delete_kernel
+      file:
+        path: "/tmp/harvester-vmlinuz"
+        state: absent
+
+    - name: delete_initrd
+      file:
+        path: "/tmp/harvester-initrd"
+        state: absent
+
+    - name: delete_rootfs
+      file:
+        path: "/tmp/harvester-rootfs.squashfs"
+        state: absent

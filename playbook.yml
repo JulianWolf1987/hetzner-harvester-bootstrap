@@ -4,18 +4,22 @@
   become: yes
   gather_facts: false
 
-  tasks:
-    - name: "Importiere: install_packages.yml"
-      import_playbook: playbooks/install_packages.yml
+- import_playbook: playbooks/harvester_install.yml
+  tags:
+    - install
 
-    - name: "Importiere: harvester_install.yml"
-      import_playbook: playbooks/harvester_install.yml
+- import_playbook: playbooks/install_packages.yml
+  tags:
+    - packages
 
-    - name: "Importiere: setup_bridge.yml"
-      import_playbook: playbooks/setup_bridge.yml
+- import_playbook: playbooks/setup_bridge.yml
+  tags:
+    - bridge
 
-    - name: "Importiere: configure_snat.yml"
-      import_playbook: playbooks/configure_snat.yml
+- import_playbook: playbooks/configure_snat.yml
+  tags:
+    - snat
 
-    - name: "Importiere: configure_multus.yml"
-      import_playbook: playbooks/configure_multus.yml
+- import_playbook: playbooks/configure_multus.yml
+  tags:
+    - multus
