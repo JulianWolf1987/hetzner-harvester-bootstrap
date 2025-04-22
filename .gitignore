@@ -25,6 +25,7 @@ Thumbs.db
 # Ansible-related
 # =========================
 .inventory/hosts.yml
+inventory/hosts.yml
 inventory/*.ini
 inventory/*.yml
 inventory/*.yaml
